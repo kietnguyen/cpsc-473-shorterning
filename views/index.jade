@@ -1,6 +1,8 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
+  h1 Crazy Eddie's Discount URL shortener
+  form(method='POST', action='/shorten')
+    input(type='text', name='long_url')
+    input(type='submit')
   p You are visitor number #{count}
