@@ -8,7 +8,7 @@
 
 ## Demo
 
-[View live demo](https://cpsc-473-shorterning.herokuapp.com)
+[View live demo](https://cpsc-473-shortening.herokuapp.com)
 
 ## Setup
 
