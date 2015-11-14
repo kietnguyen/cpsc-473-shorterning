@@ -2,7 +2,13 @@ extends layout
 
 block content
   h1 Crazy Eddie's Discount URL shortener
-  form(method='POST', action='/shorten')
-    input(type='text', name='long_url')
-    input(type='submit')
+
+  form(method="POST", action="/shorten", id="form-shortern")
+    input(type="url", name="long_url", required)
+    input(type="button", value="Submit", id="btn-submit")
+
+  .short-url
+
   p You are visitor number #{count}
+
+  script(type="text/javascript", src="/js/shorten.js")

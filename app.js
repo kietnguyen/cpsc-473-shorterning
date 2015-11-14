@@ -1,3 +1,6 @@
+#!/usr/bin/env node
+"use strict";
+
 /*
  *
  *  GET /   index view with submission form, counters, etc.
@@ -49,93 +52,114 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Returns a random integer between min and max
 // Using Math.round() will give you a non-uniform distribution!
 function getRandomInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-var uri = process.env.MONGOLAB_URI;
+var uri = process.env.MONGOLAB_URI || "mongodb://localhost:27017/test";
 
 mongodb.MongoClient.connect(uri, function(err, db) {
-    if (err) {
-        throw err;
+  if (err) {
+    throw err;
+  }
+
+  global.counters = db.collection("counters");
+  global.urls = db.collection("urls");
+
+  app.use('/', routes);
+
+  app.get('/expand/:short_id', function(req, res) {
+  });
+
+  app.get('/top/:n', function(req, res) {
+  });
+
+  app.get('/:short_id', function (req, res) {
+    var short_id = parseInt(req.params.short_id, 36);
+
+    if (isNaN(short_id)) {
+      throw new Error("Not a number");
     }
 
-    global.counters = db.collection("counters");
-    global.urls = db.collection("urls");
+    urls.findOne(
+      { short_id: short_id },
+      function(err, result) {
+        if (err) {
+          throw err;
+        }
 
-    app.use('/', routes);
+        if (result === null) {
+          return res.render("404");
+        }
 
-    app.get('/expand/:short_id', function(req, res) {
+        console.dir(result);
+        res.redirect(result.long_url);
     });
 
-    app.get('/top/:n', function(req, res) {
-    });
+  });
 
-    app.get('/:short_id', function (req, res) {
-    });
+  app.post('/shorten', function(req, res) {
+    var long_url = req.body.long_url;
 
-    app.post('/shorten', function(req, res) {
-        var long_url = req.body.long_url;
+    counters.findAndModify(
+      { name: "short_id" },
+      [['_id','asc']],
+      { $inc: { count: getRandomInt(1, 10)} },
+      {},
+      function(err, obj) {
+        if (err) {
+          throw err;
+        }
 
-        counters.findAndModify(
-            { name: "short_id" },
-            [['_id','asc']],
-            { $inc: { count: getRandomInt(1, 10)} },
-            {},
-            function(err, obj) {
-                if (err) {
-                    throw err;
-                }
+        urls.insert({
+          short_id: obj.count,
+          long_url: long_url
+        }, function(err, result) {
+          if (err) {
+            throw err;
+          }
 
-                urls.insert({
-                    short_id: obj.count,
-                    long_url: long_url
-                }, function(err, result) {
-                    if (err) {
-                        throw err;
-                    }
+          console.dir(result);
 
-                    console.dir(result);
-
-                    res.json({
-                        short_id: result[0].short_id.toString(36)
-                    });
-                });
-            }
-        );
-
-        
-    });
-
-    /// catch 404 and forwarding to error handler
-    app.use(function(req, res, next) {
-        var err = new Error('Not Found');
-        err.status = 404;
-        next(err);
-    });
-
-    /// error handlers
-
-    // development error handler
-    // will print stacktrace
-    if (app.get('env') === 'development') {
-        app.use(function(err, req, res, next) {
-            res.status(err.status || 500);
-            res.render('error', {
-                message: err.message,
-                error: err
-            });
+          res.json({
+            short_id: result[0].short_id.toString(36)
+          });
         });
-    }
+      }
+    );
 
-    // production error handler
-    // no stacktraces leaked to user
+
+  });
+
+  /// catch 404 and forwarding to error handler
+  app.use(function(req, res, next) {
+    var err = new Error('Not Found');
+    err.status = 404;
+    next(err);
+  });
+
+  /// error handlers
+
+  // development error handler
+  // will print stacktrace
+  if (app.get('env') === 'development') {
     app.use(function(err, req, res, next) {
-        res.status(err.status || 500);
-        res.render('error', {
-            message: err.message,
-            error: {}
-        });
+      res.status(err.status || 500);
+      res.render('error', {
+        message: err.message,
+        error: err
+      });
     });
+  }
+
+  // production error handler
+  // no stacktraces leaked to user
+  app.use(function(err, req, res, next) {
+    res.status(err.status || 500);
+    res.render('error', {
+      message: err.message,
+      error: {}
+    });
+  });
 
 });
 
