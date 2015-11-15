@@ -16,7 +16,7 @@
 # install node modules
 npm install
 
-# initalize `counters` collection
+# (required, manually) initialize `counters` collection
 mongo < misc/counters.js
 
 # start app
@@ -29,3 +29,18 @@ npm start
 # (simple) in bash shell
 bash misc/post.sh "https://google.com"
 ```
+
+## References
+
+**Front-end JS Libraries**
+
+* [jQuery](https://jquery.com/)
+
+**Databases**
+
+* [MongoDB](https://www.mongodb.org/)
+
+**Services**
+
+* [Heroku](https://www.heroku.com/)
+* [MongoLab](https://mongolab.com/)
